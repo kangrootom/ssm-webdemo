@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"  
+	xmlns:jee="http://www.springframework.org/schema/jee" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.2.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.2.xsd">
+		<context:component-scan base-package="cn.itcast"></context:component-scan>
+		<!-- 整合spring与mabatis -->
+		<!-- 配置连接池 -->
+		<util:properties id="props" location="classpath:db.properties" />
+		<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+			<property name="driverClassName" value="#{props.driver}"></property>
+			<property name="url" value="#{props.url}"></property>
+			<property name="username" value="#{props.user}"></property>
+			<property name="password" value="#{props.password}"></property>
+			<!-- 连接池配置属性 -->
+			<!-- 初始获取链接数 -->
+			<property name="initialSize" value="5"></property>
+			<!-- 最小链接数 -->
+			<property name="minIdle" value="1"></property>
+			<!-- 最大链接数 -->
+			<property name="maxActive" value="20"></property>
+			<!-- 获取链接等待超时 -->
+			<property name="maxWait" value="60000"></property>
+			<!-- 间隔多久进行一次检测，检测需要关闭的空闲连接（毫秒）-->
+			<property name="timeBetweenLogStatsMillis" value="60000"></property>
+			<!-- 连接在池中的最小生存时间 -->
+			<property name="minEvictableIdleTimeMillis" value="30000"></property>
+		</bean>
+		<!-- 配置SqlSessionFactoryBean 	产生SqlSssion的工厂bean
+			建议id指定sqlSessionFactory，因为有些地方会默认找这个id的对象
+		-->
+		<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+			<!-- 数据库连接信息	必须 -->
+			<property name="dataSource" ref="dataSource"></property>
+			<!-- 设置mybatis主配置文件，可以写也可以不写  引入的作用是作业写扩展设置-->
+			<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+			<!-- 设置mybatis映射配置文件所在的位置，必须(也可以写在主配置文件中) -->
+			<property name="mapperLocations" value="classpath:cn/itcast/dao/*.xml"></property>
+			<!-- 设置类的别名简写 -->
+			<property name="typeAliasesPackage" value="cn.itcast.domain"></property>
+			<!-- 整合插件功能PageHelper	plugins表示设置插件属性 -->
+			<property name="plugins">
+				<array>
+				<!--  -->
+					<bean class="com.github.pagehelper.PageInterceptor">
+						<property name="properties">
+							<value>
+								helperDialect=mysql
+							</value>
+						</property>
+					</bean>
+				</array>
+			</property>
+		</bean>
+		<!--配置Mapper-->
+		<bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+			<property name="basePackage" value="cn.itcast.dao"></property>
+			<!-- <property name="annotationClass" value="cn.itcast.dao.MybatisAnnotation"></property> -->
+		</bean>
+		
+		
+</beans>
