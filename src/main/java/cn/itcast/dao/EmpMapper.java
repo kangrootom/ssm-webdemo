@@ -105,4 +105,8 @@ public interface EmpMapper {
 	List<Emp> selectByName(String ename);
 
 	List<Integer> selectDistinctMgr();
+
+	List<Emp> selectEmpSalStatisticData();
+
+	List<Emp> selectCommStatisticData();
 }

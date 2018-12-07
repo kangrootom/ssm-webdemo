@@ -14,15 +14,36 @@
 .query {
 	margin-bottom: 20px;
 }
+
+#import_form {
+	display: inline-block;
+}
+
+#empExcel {
+	display: inline-block;
+}
 </style>
+<link href="${APP_PATH }/bootstrap3/css/bootstrap.css" rel="stylesheet">
 <script type="text/javascript"
 	src="${APP_PATH }/bootstrap3/js/jquery.js"></script>
-<link href="${APP_PATH }/bootstrap3/css/bootstrap.css" rel="stylesheet">
 <script src="${APP_PATH }/bootstrap3/js/bootstrap.js"></script>
 <script type="text/javascript"
 	src="${APP_PATH }/datepicker/WdatePicker.js"></script>
 <script type="text/javascript">
 	$(function() {
+		
+		$("#emp_info_statistic_btn").click(function() {
+			window.location.href = "${APP_PATH}/emp/empStatisticChartUI";
+		});
+		
+		$("#emp_import_btn").click(function() {
+			$("#import_form").attr("action","${APP_PATH}/emp/importExcel");
+			$("#import_form").submit();
+		});
+
+		$("#emp_export_all_btn").click(function() {
+			window.open("${APP_PATH}/emp/exportExcel");
+		});
 
 		$("#query_btn").click(function() {
 			var flag = validate_date();
@@ -261,8 +282,10 @@
 							var jobTd = $("<td></td>").append(item.job);
 							var hiredateTd = $("<td></td>").append(
 									item.hiredate);
-							var salTd = $("<td></td>").append(formatMoney(item.sal,2,'￥'));
-							var commTd = $("<td></td>").append(formatMoney(item.comm,2,'￥'));
+							var salTd = $("<td></td>").append(
+									formatMoney(item.sal, 2, '￥'));
+							var commTd = $("<td></td>").append(
+									formatMoney(item.comm, 2, '￥'));
 							var mgr = $("<td></td>").append(item.mgrName);
 							var dname = $("<td></td>").append(item.dept.dname);
 							/**
@@ -340,7 +363,7 @@
 				//显示部门信息在下拉列表中
 				//$("#empAddModal select").append("")
 				var tipEle = $("<option></option>").append("==请选择==").attr(
-						"value", "");
+						"value", 0);
 				tipEle.appendTo(ele);
 				$.each(result.list, function() {
 					var optionEle = $("<option></option>").append(this.mgrName)
@@ -385,7 +408,7 @@
 				$("#hiredate_edit_input").val(emp.hiredate);
 				$("#sal_edit_input").val(emp.sal);
 				$("#comm_edit_input").val(emp.comm);
-				if (emp.mgr != null) {
+				if (emp.mgr != null && emp.mgr != '') {
 
 					$("#empUpdateModal #mgr_edit_sel").val([ emp.mgr ]);
 				} else {
@@ -437,9 +460,9 @@
 			alert("请输入开始时间");
 			return false;
 		} else if (begindate_input_val != '' && enddate_input_val != '') {
-			if (toDate(begindate_input_val) >= toDate(enddate_input_val)) {
+			if (toDate(begindate_input_val) > toDate(enddate_input_val)) {
 				alert("开始时间不能大于结束时间");
-				 $("#begindate_input").focus();
+				$("#begindate_input").focus();
 				return false;
 			}
 		}
@@ -566,6 +589,13 @@
 			<div class="col-md-7 col-md-offset-5">
 				<button class="btn btn-primary" id="emp_add_modal_btn">新增</button>
 				<button class="btn btn-danger" id="emp_delete_all_btn">删除</button>
+				<button class="btn btn-info" id="emp_export_all_btn">导出</button>
+				<form id="import_form" action="" method="post"
+					enctype="multipart/form-data">
+					<input id="empExcel" type="file" name="empExcel" class="btn btn-info"/>
+					<button class="btn btn-info" id="emp_import_btn">导入</button>
+				</form>
+				<button class="btn btn-primary" id="emp_info_statistic_btn">员工信息统计</button>
 			</div>
 		</div>
 	</div>

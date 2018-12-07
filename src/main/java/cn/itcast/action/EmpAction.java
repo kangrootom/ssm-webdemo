@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.stereotype.Controller;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import cn.itcast.domain.Emp;
 import cn.itcast.domain.EmpVo;
@@ -29,7 +32,52 @@ public class EmpAction {
 
 	@Resource
 	private EmpService empServiceImpl;
+	
+	@RequestMapping(value="/getEmpStatisticData",method=RequestMethod.POST)
+	@ResponseBody
+	public Result getEmpStatisticData(@RequestParam("dimensionality") String dimensionality){
+		Result result = null;
+		if(dimensionality.equals("sal")) {
+			result = empServiceImpl.getEmpSalStatisticData();
+		}else {
+			result = empServiceImpl.getEmpCommStatisticData();
+		}
+		return result;
+	}
+	
+	@RequestMapping("/empStatisticChartUI")
+	public String empUI(){
+		return "emp/empStatisticChartUI";
+	}
 
+	@RequestMapping("/importExcel")
+	public String importExcel(MultipartFile empExcel)throws Exception{
+
+		if(empExcel != null){
+			//是否是excel
+			if(empExcel.getOriginalFilename().matches("^.+\\.(?i)((xls)|(xlsx))$")){
+				//2、导入
+				empServiceImpl.importExcel(empExcel);
+			}
+		}
+		return "redirect:empUI";
+	}
+
+	@RequestMapping("/exportExcel")
+	public void export(HttpServletResponse resp){
+		try {
+			List<Emp> emps = this.selectAll().getList();
+			resp.setContentType("application/vnd.ms-excel");
+			resp.setHeader("Content-Disposition", "attachment;filename="+new String("員工列表.xls".getBytes(),"ISO-8859-1"));
+			ServletOutputStream outputStream = resp.getOutputStream();
+			empServiceImpl.exportEmpExcel(emps,outputStream);
+			if(outputStream != null) {
+				outputStream.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	@RequestMapping("/emps")
 	@ResponseBody
 	public Result selectAll(){

@@ -1,19 +1,24 @@
 package cn.itcast.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import cn.itcast.dao.DeptMapper;
 import cn.itcast.dao.EmpMapper;
 import cn.itcast.domain.Dept;
 import cn.itcast.domain.Emp;
 import cn.itcast.domain.EmpExample;
-import cn.itcast.domain.EmpVo;
 import cn.itcast.domain.EmpExample.Criteria;
+import cn.itcast.domain.EmpVo;
+import cn.itcast.util.ExcelUtils;
 import cn.itcast.util.Result;
 @Service
 public class EmpServiceImpl implements EmpService{
@@ -22,6 +27,8 @@ public class EmpServiceImpl implements EmpService{
 	private EmpMapper empMapper;
 	@Resource
 	private DeptMapper deptMapper;
+	@Resource
+	private ExcelUtils excelUtils;
 	@Override
 	public Result selectAll() {
 		// TODO Auto-generated method stub
@@ -32,7 +39,7 @@ public class EmpServiceImpl implements EmpService{
 			for (Emp emp : emps) {
 				if(emp.getMgr()!=null) {
 					String mgrName = empMapper.selectByPrimaryKey(emp.getMgr()).getEname();
-					
+
 					Dept dept = deptMapper.selectByPrimaryKey(emp.getDeptno());
 					emp.setMgrName(mgrName);
 					emp.setDept(dept);
@@ -43,13 +50,13 @@ public class EmpServiceImpl implements EmpService{
 			}
 			code =1;
 			result.success(code, emps);
-			
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			result.fail(code);
 		}
-		
+
 		return result ;
 	}
 
@@ -60,7 +67,7 @@ public class EmpServiceImpl implements EmpService{
 		for (Emp emp : emps) {
 			if(emp.getMgr()!=null) {
 				String mgrName = empMapper.selectByPrimaryKey(emp.getMgr()).getEname();
-				
+
 				Dept dept = deptMapper.selectByPrimaryKey(emp.getDeptno());
 				emp.setMgrName(mgrName);
 				emp.setDept(dept);
@@ -124,7 +131,10 @@ public class EmpServiceImpl implements EmpService{
 	public Result saveOrUpdateEmp(Emp emp) {
 		int code = 0;
 		Result result = new Result();
-		if(emp.getEmpno() !=null) {
+		if(emp.getEmpno() != null) {
+			if(emp.getMgr() != null && emp.getMgr()==0) {
+				emp.setMgr(null);
+			}
 			code = empMapper.updateByPrimaryKeySelective(emp);
 		}else {
 			code = empMapper.insert(emp);
@@ -149,7 +159,7 @@ public class EmpServiceImpl implements EmpService{
 			for (Emp emp : emps) {
 				if(emp.getMgr()!=null) {
 					String mgrName = empMapper.selectByPrimaryKey(emp.getMgr()).getEname();
-					
+
 					Dept dept = deptMapper.selectByPrimaryKey(emp.getDeptno());
 					emp.setMgrName(mgrName);
 					emp.setDept(dept);
@@ -160,13 +170,13 @@ public class EmpServiceImpl implements EmpService{
 				code =1;
 				result.success(code, emps);
 			}
-			
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			result.fail(code);
 		}
-		
+
 		return result ;
 	}
 
@@ -178,22 +188,75 @@ public class EmpServiceImpl implements EmpService{
 			List<Integer> _mgrs = empMapper.selectDistinctMgr();
 			List<Emp> emps = new ArrayList<>();
 			for (Integer _mgr : _mgrs) {
-					Emp emp = new Emp();
-					String mgrName = empMapper.selectByPrimaryKey(_mgr).getEname();
-					emp.setMgr(_mgr);
-					emp.setMgrName(mgrName);
-					emps.add(emp);
+				Emp emp = new Emp();
+				String mgrName = empMapper.selectByPrimaryKey(_mgr).getEname();
+				emp.setMgr(_mgr);
+				emp.setMgrName(mgrName);
+				emps.add(emp);
 			}
 			code =1;
 			result.success(code, emps);
-			
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			result.fail(code);
 		}
-		
+
 		return result ;
+	}
+
+	@Override
+	public void exportEmpExcel(List<Emp> emps, ServletOutputStream outputStream) {
+		excelUtils.exportEmpExcel(emps, outputStream);
+	}
+
+
+	@Override
+	public void importExcel(MultipartFile empExcel) {
+		excelUtils.importExcel(empExcel);
+	}
+
+	@Override
+	public Result getEmpSalStatisticData() {
+		int code = 0 ;
+		Result result = new Result();
+		List<Emp> list = empMapper.selectEmpSalStatisticData();
+		if(list != null && list.size() > 0) {
+			code = 1;
+			List<Map<String,Object>> chartData = new ArrayList<>();
+			Map<String,Object> map = null;
+			for (Emp emp : list) {
+				map = new HashMap<>();
+				String empName = emp.getEname();
+				map.put("label", empName);
+				map.put("value",emp.getSal()!=null?emp.getSal():"");
+				chartData.add(map);
+			}
+			return result.success(code, chartData);
+		}
+		return result.fail(code);
+	}
+
+	@Override
+	public Result getEmpCommStatisticData() {
+		int code = 0 ;
+		Result result = new Result();
+		List<Emp> list = empMapper.selectCommStatisticData();
+		if(list != null && list.size() > 0) {
+			code = 1;
+			List<Map<String,Object>> chartData = new ArrayList<>();
+			Map<String,Object> map = null;
+			for (Emp emp : list) {
+				map = new HashMap<>();
+				String empName = emp.getEname();
+				map.put("label", empName);
+				map.put("value",emp.getComm()!=null?emp.getComm():"");
+				chartData.add(map);
+			}
+			return result.success(code, chartData);
+		}
+		return result.fail(code);
 	}
 
 }
